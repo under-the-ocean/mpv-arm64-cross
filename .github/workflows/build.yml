@@ -15,7 +15,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq build-essential meson ninja-build pkg-config \
-            curl git python3 \
+            curl git python3 ccache \
             libass-dev libfreetype-dev libfontconfig-dev libfribidi-dev \
             libharfbuzz-dev libgnutls28-dev libdrm-dev libv4l-dev libva-dev \
             libx264-dev libx265-dev libopus-dev libmp3lame-dev \
@@ -45,15 +45,27 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/mpv-player/mpv.git
           cd mpv
-          ./bootstrap.py
-          ./waf configure --prefix=/usr/local --enable-libmpv-shared \
-            --enable-vulkan --disable-x11 --enable-libdrm \
-            --enable-pulse --enable-libbluray --enable-dvdnav \
-            --enable-lcms2 --enable-libarchive --enable-libass \
-            --enable-lua --enable-uchardet --enable-zimg \
-            --enable-vaapi
-          ./waf -j$(nproc)
-          sudo ./waf install
+          meson setup build \
+            -Dprefix=/usr/local \
+            -Dlibmpv=true \
+            -Dvulkan=enabled \
+            -Dx11=disabled \
+            -Ddrm=enabled \
+            -Dpulse=enabled \
+            -Dlibbluray=enabled \
+            -Ddvdnav=enabled \
+            -Dlcms2=enabled \
+            -Dlibarchive=enabled \
+            -Dlua=enabled \
+            -Duchardet=enabled \
+            -Dzimg=enabled \
+            -Dvaapi=enabled \
+            -Degl-drm=enabled \
+            -Dplain-gl=disabled \
+            -Dvdpau=disabled \
+            -Dsdl2-video=disabled
+          ninja -C build
+          sudo ninja -C build install
 
       - name: Package binaries
         run: |
