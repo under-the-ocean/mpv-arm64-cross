@@ -1,30 +1,37 @@
-﻿# mpv-arm64-cross
+# ffmpeg-arm64-v4l2-request
 
-Cross-compile mpv with v4l2-m2m hardware video decoding support for ARM64 (aarch64).
+Build [FFmpeg](https://ffmpeg.org/) with **V4L2 request API** hardware video decoding support for **ARM64 (aarch64)** — designed for Allwinner H618 / H616 / H6 / H3 chips with the `cedrus` kernel driver (Orange Pi Zero 3, Orange Pi 3B, etc.).
+
+## Why?
+
+The `cedrus` V4L2 M2M stateless decoder in modern Linux kernels (6.x) requires the **V4L2 request API** (`--enable-v4l2-request`), which most pre-built FFmpeg packages don't include.
+
+This workflow compiles FFmpeg **statically** with the right flags so you can just download and run it on your board.
 
 ## Usage
 
-1. Fork or push this repo to GitHub
-2. Go to Actions → "Build mpv with v4l2-m2m for arm64" → Run workflow
-3. Wait ~20-30 min for the build to finish
-4. Download the `mpv-arm64` artifact
-5. On your Orange Pi:
-   ```bash
-   tar xzf mpv-arm64.tar.gz
-   cp bin/mpv /usr/local/bin/
-   cp lib/*.so* /usr/local/lib/
-   ldconfig
-   ```
-
-## Playback
+1. Go to **Actions** → **Build FFmpeg 8.1.1 (arm64 + V4L2 request)** → **Run workflow**
+2. Wait ~15-20 min for the build
+3. Download `ffmpeg-8.1.1-arm64.zip` from the artifact
+4. On your Orange Pi:
 
 ```bash
-# Hardware decode (auto)
-mpv --hwdec=auto video.mp4
+unzip ffmpeg-8.1.1-arm64.zip
+chmod +x ffmpeg ffplay ffprobe
 
-# Force v4l2-m2m
-mpv --hwdec=v4l2m2m video.mp4
+# Hardware-accelerated playback
+./ffplay -hwaccel v4l2request -i video.mp4
 
-# With DRM display (no X11 needed)
-mpv --vo=drm video.mp4
+# Or with explicit decoder
+./ffplay -codec:v h264_v4l2m2m -i video.mp4
+
+# Transcode with hardware decode
+./ffmpeg -hwaccel v4l2request -i input.mp4 -c:v libx264 output.mp4
 ```
+
+## How it works
+
+- Runs on GitHub's native **ARM64 runner** (`ubuntu-24.04-arm`)
+- Compiles FFmpeg 8.1.1 from source with `--enable-v4l2-request`
+- Statically linked — no extra libraries needed on your board
+- Includes `ffmpeg`, `ffplay`, `ffprobe`
