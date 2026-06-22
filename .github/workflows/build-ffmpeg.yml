@@ -1,4 +1,4 @@
-name: Build FFmpeg 8.1.1 (arm64 + V4L2 request)
+name: Build FFmpeg 8.1.1 (arm64)
 
 on:
   workflow_dispatch:
@@ -7,10 +7,6 @@ on:
         description: FFmpeg version to build
         default: "8.1.1"
         type: string
-      enable_libx264:
-        description: Include libx264/libx265 encoder
-        default: false
-        type: boolean
 
 jobs:
   build:
@@ -49,9 +45,8 @@ jobs:
             --prefix=/usr \
             --enable-gpl --enable-version3 \
             --enable-static --disable-shared \
-            --enable-v4l2-request \
-            --enable-libdrm --enable-sdl2 \
-            --enable-ffplay --enable-ffprobe \
+            --enable-libv4l2 --enable-libdrm \
+            --enable-sdl2 --enable-ffplay --enable-ffprobe \
             --enable-network --enable-openssl \
             --enable-libfreetype --enable-libfontconfig \
             --enable-libfribidi --enable-libass \
@@ -71,8 +66,7 @@ jobs:
             --enable-chromaprint --enable-postproc \
             --enable-runtime-cpudetect \
             --enable-hardcoded-tables \
-            --disable-doc \
-            ${{ inputs.enable_libx264 && '--enable-libx264 --enable-libx265' || '' }}
+            --disable-doc
 
       - name: Build
         working-directory: ffmpeg-${{ inputs.ffmpeg_version }}
